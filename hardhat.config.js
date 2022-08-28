@@ -2,6 +2,7 @@ require('hardhat-deploy');
 require("@nomiclabs/hardhat-waffle")
 require("hardhat-gas-reporter")
 require("@nomiclabs/hardhat-etherscan")
+require("@nomicfoundation/hardhat-chai-matchers")
 require("dotenv").config()
 require("solidity-coverage")
 var ethers = require("ethers").ethers;

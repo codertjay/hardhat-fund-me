@@ -36,7 +36,7 @@ const {developmentChains} = require("../../helper-hardhat-config")
     describe("fund", async function () {
         it("Fails if you don't send enough ETH", async function () {
             await expect(fundMe.fund()).to.be.revertedWith(
-                "You need to spend more eth"
+                "You need to spend more ETH!"
             )
         })
         it("Updated the amount funded data structure ", async function () {
