@@ -1,0 +1,28 @@
+{
+  "devDependencies": {
+    "@chainlink/contracts": "^0.4.2",
+    "@nomicfoundation/hardhat-toolbox": "^1.0.2",
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "chai": "^4.3.6",
+    "ethers": "^5.7.0",
+    "hardhat": "^2.10.2",
+    "hardhat-deploy": "^0.11.12",
+    "hardhat-gas-reporter": "^1.0.8",
+    "solidity-coverage": "^0.7.21"
+  },
+  "dependencies": {
+    "@nomiclabs/hardhat-etherscan": "^3.1.0",
+    "chai": "^4.3.6",
+    "dotenv": "^16.0.1"
+  },
+  "scripts": {
+    "start": "hardhat start",
+    "test": "hardhat test",
+    "test:staging": "hardhat test --network kovan",
+    "deploy": "hardhat deploy",
+    "coverage": "hardhat coverage",
+    "lint": "solhint 'contracts/*.sol'",
+    "lint:fix": "solhint 'contracts/*.sol' --fix"
+  }
+}

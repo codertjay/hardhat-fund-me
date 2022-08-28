@@ -1,0 +1,41 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/FundMe.sol": {
+      "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.8;\r\n\r\nimport \"@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol\";\r\nimport \"./PriceConverter.sol\";\r\n\r\n    error NotOwner();\r\n\r\ncontract FundMe {\r\n    using PriceConverter for uint256;\r\n\r\n    mapping(address => uint256) public addressToAmountFunded;\r\n    address[] public funders;\r\n\r\n    // Could we make this constant?  /* hint: no! We should make it immutable! */\r\n    address public /* immutable */ i_owner;\r\n    uint256 public constant MINIMUM_USD = 50 * 10 ** 18;\r\n    AggregatorV3Interface public priceFeed;\r\n\r\n    constructor(address priceFeedAddress) {\r\n        i_owner = msg.sender;\r\n        priceFeed = AggregatorV3Interface(priceFeedAddress);\r\n    }\r\n\r\n    function fund() public payable {\r\n        require(msg.value.getConversionRate(priceFeed) >= MINIMUM_USD, \"You need to spend more ETH!\");\r\n        // require(PriceConverter.getConversionRate(msg.value) >= MINIMUM_USD, \"You need to spend more ETH!\");\r\n        addressToAmountFunded[msg.sender] += msg.value;\r\n        funders.push(msg.sender);\r\n    }\r\n\r\n\r\n\r\n    modifier onlyOwner {\r\n        // require(msg.sender == owner);\r\n        if (msg.sender != i_owner) revert NotOwner();\r\n        _;\r\n    }\r\n\r\n    function withdraw() payable onlyOwner public {\r\n        for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {\r\n            address funder = funders[funderIndex];\r\n            addressToAmountFunded[funder] = 0;\r\n        }\r\n        funders = new address[](0);\r\n        // // transfer\r\n        // payable(msg.sender).transfer(address(this).balance);\r\n        // // send\r\n        // bool sendSuccess = payable(msg.sender).send(address(this).balance);\r\n        // require(sendSuccess, \"Send failed\");\r\n        // call\r\n        (bool callSuccess,) = payable(msg.sender).call{value : address(this).balance}(\"\");\r\n        require(callSuccess, \"Call failed\");\r\n    }\r\n    // Explainer from: https://solidity-by-example.org/fallback/\r\n    // Ether is sent to contract\r\n    //      is msg.data empty?\r\n    //          /   \\\r\n    //         yes  no\r\n    //         /     \\\r\n    //    receive()?  fallback()\r\n    //     /   \\\r\n    //   yes   no\r\n    //  /        \\\r\n    //receive()  fallback()\r\n\r\n    fallback() external payable {\r\n        fund();\r\n    }\r\n\r\n    receive() external payable {\r\n        fund();\r\n    }\r\n\r\n}\r\n\r\n// Concepts we didn't cover yet (will cover in later sections)\r\n// 1. Enum\r\n// 2. Events\r\n// 3. Try / Catch\r\n// 4. Function Selector\r\n// 5. abi.encode / decode\r\n// 6. Hash with keccak256\r\n// 7. Yul / Assembly\r\n\r\n\r\n"
+    },
+    "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ninterface AggregatorV3Interface {\n  function decimals() external view returns (uint8);\n\n  function description() external view returns (string memory);\n\n  function version() external view returns (uint256);\n\n  function getRoundData(uint80 _roundId)\n    external\n    view\n    returns (\n      uint80 roundId,\n      int256 answer,\n      uint256 startedAt,\n      uint256 updatedAt,\n      uint80 answeredInRound\n    );\n\n  function latestRoundData()\n    external\n    view\n    returns (\n      uint80 roundId,\n      int256 answer,\n      uint256 startedAt,\n      uint256 updatedAt,\n      uint80 answeredInRound\n    );\n}\n"
+    },
+    "contracts/PriceConverter.sol": {
+      "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.8;\r\n\r\nimport \"@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol\";\r\n\r\n// Why is this a library and not abstract?\r\n// Why not an interface?\r\nlibrary PriceConverter {\r\n    // We could make this public, but then we'd have to deploy it\r\n    function getPrice(AggregatorV3Interface priceFeed) internal view returns (uint256) {\r\n        // Rinkeby ETH / USD Address\r\n        // https://docs.chain.link/docs/ethereum-addresses/\r\n\r\n        (, int256 answer, , ,) = priceFeed.latestRoundData();\r\n        // ETH/USD rate in 18 digit\r\n        return uint256(answer * 10000000000);\r\n    }\r\n\r\n    // 1000000000\r\n    function getConversionRate(uint256 ethAmount, AggregatorV3Interface priceFeed)\r\n\r\n    internal\r\n    view\r\n    returns (uint256)\r\n    {\r\n        uint256 ethPrice = getPrice(priceFeed);\r\n        uint256 ethAmountInUsd = (ethPrice * ethAmount) / 1000000000000000000;\r\n        // the actual ETH/USD conversion rate, after adjusting the extra 0s.\r\n        return ethAmountInUsd;\r\n    }\r\n}"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}
